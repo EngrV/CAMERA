@@ -3,9 +3,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0b1020">
-<title>Camera App</title>
+<title>Camera & Photo Gallery</title>
 
 <style>
 :root {
@@ -16,8 +16,6 @@
     --text: #f4f7ff;
     --muted: #aab5cc;
     --accent: #5b8cff;
-    --accent-hover: #4075ef;
-    --danger: #e74c65;
     --border: #34405c;
 }
 
@@ -28,7 +26,7 @@
 body {
     margin: 0;
     min-height: 100vh;
-    padding: 24px 14px;
+    padding: 22px 12px;
     background: var(--bg);
     color: var(--text);
     font-family: Arial, Helvetica, sans-serif;
@@ -36,8 +34,8 @@ body {
 
 .container {
     width: 100%;
-    max-width: 760px;
-    margin: 0 auto;
+    max-width: 850px;
+    margin: auto;
 }
 
 header {
@@ -51,94 +49,96 @@ header h1 {
 }
 
 header p {
-    color: var(--muted);
     margin: 0;
+    color: var(--muted);
     line-height: 1.5;
 }
 
 .panel {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 18px;
+    border-radius: 16px;
+    padding: 16px;
     margin-bottom: 16px;
 }
 
+.section-title {
+    margin: 0 0 14px;
+    font-size: 19px;
+}
+
 .preview {
-    width: 100%;
     aspect-ratio: 4 / 3;
+    width: 100%;
     overflow: hidden;
-    border-radius: 12px;
     background: #050811;
+    border-radius: 12px;
     display: flex;
-    align-items: center;
     justify-content: center;
-    position: relative;
+    align-items: center;
 }
 
 .preview video,
 .preview img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
-    display: block;
 }
 
 .placeholder {
-    color: var(--muted);
-    text-align: center;
     padding: 20px;
+    text-align: center;
+    color: var(--muted);
     line-height: 1.6;
 }
 
 .status {
-    margin-top: 14px;
+    margin-top: 12px;
     padding: 12px;
     background: var(--panel2);
     border-radius: 10px;
     color: var(--muted);
+    font-size: 14px;
     line-height: 1.5;
     overflow-wrap: anywhere;
 }
 
 .status.error {
     color: #ffb4bf;
-    border: 1px solid #713747;
 }
 
 .status.success {
     color: #9af0c0;
-    border: 1px solid #28674b;
 }
 
 .controls {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    margin-top: 16px;
+    gap: 9px;
+    margin-top: 14px;
 }
 
 button {
     width: 100%;
-    min-height: 46px;
-    padding: 12px 14px;
+    min-height: 44px;
+    padding: 11px;
     border: 0;
-    border-radius: 10px;
+    border-radius: 9px;
     background: var(--accent);
-    color: #ffffff;
-    font-size: 14px;
+    color: #fff;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, opacity 0.15s;
 }
 
 button:hover:not(:disabled) {
-    background: var(--accent-hover);
+    filter: brightness(1.1);
 }
 
 button:disabled {
-    cursor: not-allowed;
     opacity: 0.45;
+    cursor: not-allowed;
 }
 
 button.secondary {
@@ -147,32 +147,18 @@ button.secondary {
     color: var(--text);
 }
 
-button.secondary:hover:not(:disabled) {
-    background: #2b3856;
-}
-
 button.danger {
-    background: var(--danger);
+    background: #d83e59;
 }
 
 button.save {
     background: #168653;
 }
 
-button.save:hover:not(:disabled) {
-    background: #117245;
-}
-
-.section-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0 0 14px;
-}
-
 .photo-details {
     color: var(--muted);
     font-size: 13px;
-    line-height: 1.7;
+    line-height: 1.8;
     overflow-wrap: anywhere;
 }
 
@@ -180,25 +166,63 @@ button.save:hover:not(:disabled) {
     color: var(--muted);
     font-size: 12px;
     line-height: 1.6;
-    margin: 12px 0 0;
+}
+
+.photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.gallery-card {
+    min-width: 0;
+    padding: 10px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.gallery-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+    background: #050811;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.gallery-filename {
+    margin: 8px 0;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.gallery-date {
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 8px;
+    overflow-wrap: anywhere;
+}
+
+.gallery-card button {
+    min-height: 36px;
+    margin-top: 5px;
+    font-size: 12px;
 }
 
 @media (max-width: 420px) {
-    body {
-        padding: 16px 10px;
-    }
-
     .panel {
         padding: 12px;
     }
 
     .controls {
-        gap: 8px;
+        gap: 7px;
     }
 
     button {
-        padding: 11px 8px;
-        font-size: 13px;
+        padding: 10px 7px;
     }
 }
 </style>
@@ -207,53 +231,59 @@ button.save:hover:not(:disabled) {
 <body>
 <div class="container">
 
-    <header>
-        <h1>Camera App</h1>
-        <p>Take photos, download them, or save photo data to Google Sheets.</p>
-    </header>
+<header>
+    <h1>Camera & Photo Gallery</h1>
+    <p>Capture photos, save them to Google Sheets, and view your collection.</p>
+</header>
 
-    <section class="panel">
-        <div class="preview" id="preview">
-            <div class="placeholder" id="placeholder">
-                Your camera preview will appear here.
-            </div>
-            <video id="video" autoplay playsinline muted hidden></video>
-            <img id="photoPreview" alt="Captured photo preview" hidden>
+<section class="panel">
+    <div class="preview">
+        <div class="placeholder" id="placeholder">
+            Your camera preview will appear here.
         </div>
+        <video id="video" autoplay playsinline muted hidden></video>
+        <img id="photoPreview" alt="Captured photo" hidden>
+    </div>
 
-        <div class="status" id="status" role="status" aria-live="polite">
-            Ready. Open your camera to begin.
-        </div>
+    <div id="status" class="status" role="status" aria-live="polite">
+        Ready. Open your camera to begin.
+    </div>
 
-        <div class="controls">
-            <button id="openCameraBtn">Open Camera</button>
-            <button id="takePhotoBtn" disabled>Take Photo</button>
-            <button id="retakeBtn" class="secondary" disabled>Retake Photo</button>
-            <button id="switchCameraBtn" class="secondary" disabled>Switch Camera</button>
-            <button id="stopCameraBtn" class="danger" disabled>Stop Camera</button>
-            <button id="downloadBtn" class="secondary" disabled>Download Photo</button>
-            <button id="saveBtn" class="save" disabled>Save to Google Sheets</button>
-        </div>
+    <div class="controls">
+        <button id="openCameraBtn">Open Camera</button>
+        <button id="takePhotoBtn" disabled>Take Photo</button>
+        <button id="retakeBtn" class="secondary" disabled>Retake Photo</button>
+        <button id="switchCameraBtn" class="secondary" disabled>Switch Camera</button>
+        <button id="stopCameraBtn" class="danger" disabled>Stop Camera</button>
+        <button id="downloadBtn" class="secondary" disabled>Download Photo</button>
+        <button id="saveBtn" class="save" disabled>Save to Google Sheets</button>
+    </div>
 
-        <p class="note">
-            Camera access requires permission and generally works on HTTPS websites,
-            including GitHub Pages.
-        </p>
-    </section>
+    <p class="note">
+        Allow camera permission when your browser asks. Camera access requires HTTPS
+        or a supported secure context.
+    </p>
+</section>
 
-    <section class="panel">
-        <h2 class="section-title">Photo Details</h2>
-        <div class="photo-details">
-            <div>Filename: <span id="filename">No photo captured</span></div>
-            <div>Photo size: <span id="photoSize">—</span></div>
-            <div>Upload status: <span id="uploadStatus">Not uploaded</span></div>
-        </div>
-        <p class="note">
-            Photos are compressed to JPEG before upload. The app sends Base64 text
-            chunks to your Google Apps Script endpoint; it does not upload photos
-            to Google Drive.
-        </p>
-    </section>
+<section class="panel">
+    <h2 class="section-title">Photo Details</h2>
+    <div class="photo-details">
+        <div>Filename: <span id="filename">No photo captured</span></div>
+        <div>Photo size: <span id="photoSize">—</span></div>
+        <div>Upload status: <span id="uploadStatus">Not uploaded</span></div>
+    </div>
+</section>
+
+<section class="panel">
+    <h2 class="section-title">Saved Photos</h2>
+    <button id="loadGalleryBtn" type="button">
+        Load Photos from Google Sheets
+    </button>
+    <div id="galleryStatus" class="status" role="status" aria-live="polite">
+        Click the button to load saved photos.
+    </div>
+    <div id="photoGallery" class="photo-gallery"></div>
+</section>
 
 </div>
 
@@ -261,7 +291,7 @@ button.save:hover:not(:disabled) {
 "use strict";
 
 const APPS_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbyfokSJh3tVQ57_7XniPweDaHQiH-u4UrcF3bfy9bNSTMIOqfmmeA_f_etoolRmY24RCw/exec";
+"https://script.google.com/macros/s/AKfycbyfokSJh3tVQ57_7XniPweDaHQiH-u4UrcF3bfy9bNSTMIOqfmmeA_f_etoolRmY24RCw/exec";
 
 const MAX_IMAGE_WIDTH = 960;
 const JPEG_QUALITY = 0.55;
@@ -283,6 +313,10 @@ const saveBtn = document.getElementById("saveBtn");
 const filenameElement = document.getElementById("filename");
 const photoSizeElement = document.getElementById("photoSize");
 const uploadStatusElement = document.getElementById("uploadStatus");
+
+const loadGalleryBtn = document.getElementById("loadGalleryBtn");
+const photoGallery = document.getElementById("photoGallery");
+const galleryStatus = document.getElementById("galleryStatus");
 
 let cameraStream = null;
 let currentFacingMode = "environment";
@@ -327,10 +361,19 @@ function showPlaceholder() {
     placeholder.hidden = false;
 }
 
+function stopCameraTracks() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    video.srcObject = null;
+}
+
 async function openCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia) {
         setStatus(
-            "Camera access is unavailable. Open this page over HTTPS and use a supported browser.",
+            "Camera access is unavailable. Open this site over HTTPS.",
             "error"
         );
         return;
@@ -354,20 +397,19 @@ async function openCamera() {
         await video.play();
 
         showLivePreview();
-        setStatus("Camera is ready.");
+        setStatus("Camera is ready.", "success");
     } catch (error) {
         cameraStream = null;
         showPlaceholder();
 
         let message = "Unable to open the camera.";
 
-        if (error.name === "NotAllowedError" ||
-            error.name === "PermissionDeniedError") {
-            message = "Camera permission was denied. Allow camera access in your browser settings.";
+        if (error.name === "NotAllowedError") {
+            message = "Camera permission denied. Allow camera access in browser settings.";
         } else if (error.name === "NotFoundError") {
-            message = "No compatible camera was found on this device.";
+            message = "No compatible camera was found.";
         } else if (error.name === "NotReadableError") {
-            message = "The camera may already be in use by another application.";
+            message = "The camera may be in use by another application.";
         }
 
         setStatus(message, "error");
@@ -376,46 +418,44 @@ async function openCamera() {
     updateControls();
 }
 
-function stopCameraTracks() {
-    if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
-    }
-
-    video.srcObject = null;
-}
-
 function stopCamera() {
     stopCameraTracks();
     showPlaceholder();
+
     setStatus(
         capturedBase64
             ? "Camera stopped. Your captured photo is still available."
             : "Camera stopped."
     );
+
     updateControls();
 }
 
 async function switchCamera() {
     currentFacingMode =
         currentFacingMode === "environment" ? "user" : "environment";
-
     await openCamera();
 }
 
+function createFilename() {
+    return "photo-" +
+        new Date().toISOString().replace(/[:.]/g, "-") +
+        ".jpg";
+}
+
 function makePhotoId() {
-    if (window.crypto && typeof window.crypto.randomUUID === "function") {
-        return window.crypto.randomUUID();
+    if (crypto && typeof crypto.randomUUID === "function") {
+        return crypto.randomUUID();
     }
 
     return "photo-" + Date.now() + "-" +
         Math.random().toString(36).slice(2);
 }
 
-function createFilename() {
-    const now = new Date();
-    const timestamp = now.toISOString().replace(/[:.]/g, "-");
-    return "photo-" + timestamp + ".jpg";
+function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 }
 
 function takePhoto() {
@@ -424,13 +464,11 @@ function takePhoto() {
         return;
     }
 
-    const originalWidth = video.videoWidth;
-    const originalHeight = video.videoHeight;
-    const scale = Math.min(1, MAX_IMAGE_WIDTH / originalWidth);
-
+    const scale = Math.min(1, MAX_IMAGE_WIDTH / video.videoWidth);
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(originalWidth * scale);
-    canvas.height = Math.round(originalHeight * scale);
+
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
 
     const context = canvas.getContext("2d");
 
@@ -449,9 +487,8 @@ function takePhoto() {
     showPhotoPreview();
 
     filenameElement.textContent = capturedFilename;
-    photoSizeElement.textContent = formatBytes(
-        Math.ceil(capturedBase64.length * 3 / 4)
-    );
+    photoSizeElement.textContent =
+        formatBytes(Math.ceil(capturedBase64.length * 3 / 4));
     uploadStatusElement.textContent = "Not uploaded";
 
     setStatus("Photo captured. You can retake, download, or save it.");
@@ -473,21 +510,18 @@ function retakePhoto() {
         setStatus("Ready to take another photo.");
     } else {
         showPlaceholder();
-        setStatus("Photo cleared. Open the camera to take another photo.");
+        setStatus("Open the camera to take another photo.");
     }
 
     updateControls();
 }
 
 function downloadPhoto() {
-    if (!capturedDataUrl || !capturedFilename) {
-        setStatus("Take a photo first.", "error");
-        return;
-    }
+    if (!capturedDataUrl) return;
 
     const link = document.createElement("a");
     link.href = capturedDataUrl;
-    link.download = capturedFilename;
+    link.download = capturedFilename || "photo.jpg";
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -495,32 +529,8 @@ function downloadPhoto() {
     setStatus("Download started.");
 }
 
-function formatBytes(bytes) {
-    if (!Number.isFinite(bytes) || bytes < 0) {
-        return "Unknown";
-    }
-
-    if (bytes < 1024) {
-        return bytes + " B";
-    }
-
-    if (bytes < 1024 * 1024) {
-        return (bytes / 1024).toFixed(1) + " KB";
-    }
-
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-}
-
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function postToAppsScript(payload) {
-    /*
-      no-cors prevents the browser from exposing the cross-origin response.
-      A fulfilled fetch therefore does not prove that Apps Script saved the data.
-    */
-    await fetch(APPS_SCRIPT_URL, {
+function postToAppsScript(payload) {
+    return fetch(APPS_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
         headers: {
@@ -530,55 +540,42 @@ async function postToAppsScript(payload) {
     });
 }
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function saveToGoogleSheets() {
-    if (!capturedBase64 || !capturedFilename) {
-        setStatus("Take a photo before saving.", "error");
-        return;
-    }
-
-    if (uploading) {
-        return;
-    }
-
-    if (!APPS_SCRIPT_URL.endsWith("/exec")) {
-        setStatus("The Apps Script deployment URL is not configured correctly.", "error");
-        return;
-    }
+    if (!capturedBase64 || uploading) return;
 
     uploading = true;
     updateControls();
-    uploadStatusElement.textContent = "Sending...";
     saveBtn.textContent = "Saving...";
+    uploadStatusElement.textContent = "Sending...";
 
     const photoId = makePhotoId();
     const totalChunks = Math.ceil(capturedBase64.length / CHUNK_SIZE);
 
     try {
-        setStatus("Preparing photo data for Google Sheets...");
-
         for (let index = 0; index < totalChunks; index++) {
-            const start = index * CHUNK_SIZE;
-            const chunk = capturedBase64.slice(start, start + CHUNK_SIZE);
+            const chunk = capturedBase64.slice(
+                index * CHUNK_SIZE,
+                (index + 1) * CHUNK_SIZE
+            );
 
-            const payload = {
+            await postToAppsScript({
                 action: "chunk",
                 photoId: photoId,
                 chunkIndex: index,
                 totalChunks: totalChunks,
                 chunk: chunk
-            };
+            });
 
-            await postToAppsScript(payload);
-
-            const percent = Math.round(((index + 1) / totalChunks) * 100);
             setStatus(
-                "Sending photo data: chunk " +
-                (index + 1) + " of " + totalChunks +
-                " (" + percent + "%)."
+                "Sending photo data: chunk " + (index + 1) +
+                " of " + totalChunks + "."
             );
 
-            // Briefly yield between requests to reduce rapid consecutive writes.
-            await delay(120);
+            await delay(150);
         }
 
         await postToAppsScript({
@@ -588,22 +585,218 @@ async function saveToGoogleSheets() {
             mimeType: "image/jpeg"
         });
 
-        uploadStatusElement.textContent = "Request sent; verification needed";
+        uploadStatusElement.textContent = "Sent; verification needed";
 
         setStatus(
-            "Upload requests were sent. The browser cannot confirm whether Google Sheets saved every chunk. Check the Photo Data and Camera Logs sheets before treating this photo as saved.",
-            ""
+            "Upload requests were sent. Check Camera Logs and Photo Data to verify the photo was saved."
         );
     } catch (error) {
         uploadStatusElement.textContent = "Upload error";
         setStatus(
-            "A network error occurred while sending the photo. Check your connection and the Google Apps Script deployment, then check Google Sheets before trying again.",
+            "A network error occurred. Check your connection and Google Apps Script deployment.",
             "error"
         );
     } finally {
         uploading = false;
         saveBtn.textContent = "Save to Google Sheets";
         updateControls();
+    }
+}
+
+/* JSONP reader for the Apps Script gallery endpoints. */
+function callAppsScriptJsonp(params) {
+    return new Promise((resolve, reject) => {
+        const callbackName = "sheetCallback_" +
+            Date.now() + "_" +
+            Math.random().toString(36).slice(2);
+
+        const script = document.createElement("script");
+        const url = new URL(APPS_SCRIPT_URL);
+
+        Object.entries(params).forEach(([key, value]) => {
+            url.searchParams.set(key, value);
+        });
+
+        url.searchParams.set("callback", callbackName);
+        url.searchParams.set("_", Date.now());
+
+        let finished = false;
+
+        function cleanup() {
+            delete window[callbackName];
+            script.remove();
+        }
+
+        const timer = setTimeout(() => {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            reject(new Error("Request timed out."));
+        }, 60000);
+
+        window[callbackName] = data => {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timer);
+            cleanup();
+            resolve(data);
+        };
+
+        script.onerror = () => {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timer);
+            cleanup();
+            reject(new Error("Could not contact Google Apps Script."));
+        };
+
+        script.src = url.toString();
+        document.head.appendChild(script);
+    });
+}
+
+function openImageInNewTab(dataUrl) {
+    const newWindow = window.open("", "_blank");
+
+    if (!newWindow) {
+        galleryStatus.textContent =
+            "Your browser blocked the new tab. Allow pop-ups and try again.";
+        return;
+    }
+
+    const image = newWindow.document.createElement("img");
+    image.src = dataUrl;
+    image.alt = "Saved photo";
+    image.style.maxWidth = "100%";
+    image.style.height = "auto";
+
+    newWindow.document.title = "Saved Photo";
+    newWindow.document.body.style.margin = "0";
+    newWindow.document.body.style.background = "#111";
+    newWindow.document.body.appendChild(image);
+}
+
+async function loadSavedPhotos() {
+    loadGalleryBtn.disabled = true;
+    photoGallery.replaceChildren();
+    galleryStatus.textContent = "Loading photo list...";
+
+    try {
+        const result = await callAppsScriptJsonp({
+            action: "gallery"
+        });
+
+        if (!result.ok) {
+            throw new Error(result.error || "Unable to load the gallery.");
+        }
+
+        const photos = result.photos || [];
+
+        if (!photos.length) {
+            galleryStatus.textContent =
+                "No photos found in Camera Logs.";
+            return;
+        }
+
+        let loaded = 0;
+        let failed = 0;
+
+        galleryStatus.textContent =
+            "Found " + photos.length + " photo(s). Loading images...";
+
+        for (const photo of photos) {
+            const card = document.createElement("div");
+            card.className = "gallery-card";
+
+            const img = document.createElement("img");
+            img.className = "gallery-image";
+            img.alt = photo.filename || "Saved photo";
+            img.loading = "lazy";
+
+            const name = document.createElement("div");
+            name.className = "gallery-filename";
+            name.textContent = photo.filename || "Saved photo";
+
+            const date = document.createElement("div");
+            date.className = "gallery-date";
+            date.textContent = photo.timestamp || "";
+
+            const openButton = document.createElement("button");
+            openButton.type = "button";
+            openButton.className = "secondary";
+            openButton.textContent = "Open Photo";
+            openButton.disabled = true;
+
+            const downloadButton = document.createElement("button");
+            downloadButton.type = "button";
+            downloadButton.className = "secondary";
+            downloadButton.textContent = "Download";
+            downloadButton.disabled = true;
+
+            card.append(img, name, date, openButton, downloadButton);
+            photoGallery.appendChild(card);
+
+            try {
+                const imageResult = await callAppsScriptJsonp({
+                    action: "photo",
+                    id: photo.id
+                });
+
+                if (!imageResult.ok || !imageResult.base64) {
+                    throw new Error(
+                        imageResult.error || "Image data is missing."
+                    );
+                }
+
+                const dataUrl = "data:" +
+                    (imageResult.mimeType || "image/jpeg") +
+                    ";base64," + imageResult.base64;
+
+                img.src = dataUrl;
+
+                img.addEventListener("click", () => {
+                    openImageInNewTab(dataUrl);
+                });
+
+                openButton.disabled = false;
+                downloadButton.disabled = false;
+
+                openButton.addEventListener("click", () => {
+                    openImageInNewTab(dataUrl);
+                });
+
+                downloadButton.addEventListener("click", () => {
+                    const link = document.createElement("a");
+                    link.href = dataUrl;
+                    link.download = photo.filename || "saved-photo.jpg";
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                });
+
+                loaded++;
+            } catch (error) {
+                img.alt = "Unable to load this photo";
+                name.textContent =
+                    (photo.filename || "Saved photo") + " — failed to load";
+                failed++;
+            }
+
+            galleryStatus.textContent =
+                "Loaded " + loaded + " of " + photos.length +
+                " photo(s)" +
+                (failed ? "; " + failed + " failed." : "...");
+        }
+
+        galleryStatus.textContent =
+            "Finished: " + loaded + " photo(s) loaded." +
+            (failed ? " " + failed + " could not be loaded." : "");
+    } catch (error) {
+        galleryStatus.textContent =
+            "Error: " + error.message +
+            " Check the deployment URL, access permissions, and sheet names.";
+    } finally {
+        loadGalleryBtn.disabled = false;
     }
 }
 
@@ -614,6 +807,7 @@ switchCameraBtn.addEventListener("click", switchCamera);
 stopCameraBtn.addEventListener("click", stopCamera);
 downloadBtn.addEventListener("click", downloadPhoto);
 saveBtn.addEventListener("click", saveToGoogleSheets);
+loadGalleryBtn.addEventListener("click", loadSavedPhotos);
 
 window.addEventListener("pagehide", stopCameraTracks);
 
