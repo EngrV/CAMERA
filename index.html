@@ -4,814 +4,981 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b1020">
-<title>Camera & Photo Gallery</title>
-
+<title>Face Recognition Attendance Camera</title>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/dist/human.js"></script>
 <style>
 :root {
-    color-scheme: dark;
-    --bg: #0b1020;
-    --panel: #151d32;
-    --panel2: #202a43;
-    --text: #f4f7ff;
-    --muted: #aab5cc;
-    --accent: #5b8cff;
-    --border: #34405c;
+  color-scheme: dark;
+  --bg: #0b1220;
+  --panel: #111c2f;
+  --line: #2b3a52;
+  --text: #f3f6fc;
+  --muted: #aab7cb;
+  --green: #22c55e;
+  --blue: #3b82f6;
 }
-
-* {
-    box-sizing: border-box;
-}
-
+* { box-sizing: border-box; }
 body {
-    margin: 0;
-    min-height: 100vh;
-    padding: 22px 12px;
-    background: var(--bg);
-    color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background: radial-gradient(circle at top, #17243a, var(--bg) 58%);
+  font-family: Arial, Helvetica, sans-serif;
 }
-
-.container {
-    width: 100%;
-    max-width: 850px;
-    margin: auto;
+header { padding: 24px 16px 10px; text-align: center; }
+h1 { font-size: clamp(22px, 4vw, 32px); margin: 0 0 8px; }
+header p { color: var(--muted); margin: 0; }
+main {
+  width: min(1180px, 100%);
+  margin: auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
-
-header {
-    text-align: center;
-    margin-bottom: 22px;
+.card {
+  background: #111c2f;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  min-width: 0;
+  box-shadow: 0 14px 35px #0002;
 }
-
-header h1 {
-    margin: 0 0 8px;
-    font-size: clamp(25px, 5vw, 36px);
+.card h2 { font-size: 18px; margin: 0 0 14px; }
+.cameraWrap {
+  position: relative;
+  overflow: hidden;
+  background: #050912;
+  border-radius: 12px;
+  aspect-ratio: 4 / 3;
+  min-height: 210px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
-header p {
-    margin: 0;
-    color: var(--muted);
-    line-height: 1.5;
+video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
 }
-
-.panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 16px;
+#faceOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
-
-.section-title {
-    margin: 0 0 14px;
-    font-size: 19px;
-}
-
-.preview {
-    aspect-ratio: 4 / 3;
-    width: 100%;
-    overflow: hidden;
-    background: #050811;
-    border-radius: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.preview video,
-.preview img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.placeholder {
-    padding: 20px;
-    text-align: center;
-    color: var(--muted);
-    line-height: 1.6;
-}
-
-.status {
-    margin-top: 12px;
-    padding: 12px;
-    background: var(--panel2);
-    border-radius: 10px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-}
-
-.status.error {
-    color: #ffb4bf;
-}
-
-.status.success {
-    color: #9af0c0;
-}
-
-.controls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
-    margin-top: 14px;
-}
-
+.cameraPlaceholder { color: var(--muted); text-align: center; padding: 20px; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 button {
-    width: 100%;
-    min-height: 44px;
-    padding: 11px;
-    border: 0;
-    border-radius: 9px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  background: var(--blue);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
 }
-
-button:hover:not(:disabled) {
-    filter: brightness(1.1);
+button:hover { filter: brightness(1.1); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.secondary { background: #334155; }
+button.green { background: #15803d; }
+button.red { background: #b91c1c; }
+button.gold { background: #a16207; }
+input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #0b1424;
+  color: var(--text);
+  margin-top: 6px;
+  margin-bottom: 12px;
 }
-
-button:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
+label { display: block; color: #d8e1ee; font-size: 13px; font-weight: 700; }
+.status {
+  margin-top: 12px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: #0b1424;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  overflow-wrap: anywhere;
 }
-
-button.secondary {
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    color: var(--text);
+.status.good { color: #bbf7d0; border-color: #166534; }
+.status.bad { color: #fecaca; border-color: #7f1d1d; }
+.status.warn { color: #fde68a; border-color: #854d0e; }
+.small { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.full { grid-column: 1 / -1; }
+.tableWrap {
+  overflow: auto;
+  max-height: 330px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
-
-button.danger {
-    background: #d83e59;
-}
-
-button.save {
-    background: #168653;
-}
-
-.photo-details {
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.8;
-    overflow-wrap: anywhere;
-}
-
-.note {
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.6;
-}
-
-.photo-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-    gap: 12px;
-    margin-top: 15px;
-}
-
-.gallery-card {
-    min-width: 0;
-    padding: 10px;
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-}
-
-.gallery-image {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    display: block;
-    background: #050811;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.gallery-filename {
-    margin: 8px 0;
-    font-size: 12px;
-    overflow-wrap: anywhere;
-}
-
-.gallery-date {
-    color: var(--muted);
-    font-size: 11px;
-    margin-bottom: 8px;
-    overflow-wrap: anywhere;
-}
-
-.gallery-card button {
-    min-height: 36px;
-    margin-top: 5px;
-    font-size: 12px;
-}
-
-@media (max-width: 420px) {
-    .panel {
-        padding: 12px;
-    }
-
-    .controls {
-        gap: 7px;
-    }
-
-    button {
-        padding: 10px 7px;
-    }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 440px; }
+th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+th { position: sticky; top: 0; background: #17243a; color: #dbeafe; }
+.pill { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: bold; background: #26364d; color: #dbeafe; }
+.pill.in { background: #14532d; color: #bbf7d0; }
+.pill.out { background: #7f1d1d; color: #fecaca; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.photo { border: 1px solid var(--line); border-radius: 10px; padding: 8px; background: #0b1424; min-width: 0; }
+.photo img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 7px; background: #111827; }
+.photo p { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.photo button { padding: 7px 9px; font-size: 11px; width: 100%; margin-top: 5px; }
+.divider { height: 1px; background: var(--line); margin: 16px 0; }
+@media (max-width: 780px) {
+  main { grid-template-columns: 1fr; padding: 10px; }
+  .full { grid-column: auto; }
+  .card { padding: 14px; }
 }
 </style>
 </head>
-
 <body>
-<div class="container">
-
 <header>
-    <h1>Camera & Photo Gallery</h1>
-    <p>Capture photos, save them to Google Sheets, and view your collection.</p>
+  <h1>Face Recognition Attendance</h1>
+  <p>Camera recognition · Time In / Time Out · Google Sheets</p>
 </header>
 
-<section class="panel">
-    <div class="preview">
-        <div class="placeholder" id="placeholder">
-            Your camera preview will appear here.
-        </div>
-        <video id="video" autoplay playsinline muted hidden></video>
-        <img id="photoPreview" alt="Captured photo" hidden>
-    </div>
-
-    <div id="status" class="status" role="status" aria-live="polite">
-        Ready. Open your camera to begin.
+<main>
+  <section class="card">
+    <h2>Camera</h2>
+    <div class="cameraWrap">
+      <div class="cameraPlaceholder" id="cameraPlaceholder">Start camera to begin</div>
+      <video id="video" autoplay playsinline muted hidden></video>
+      <canvas id="faceOverlay"></canvas>
     </div>
 
     <div class="controls">
-        <button id="openCameraBtn">Open Camera</button>
-        <button id="takePhotoBtn" disabled>Take Photo</button>
-        <button id="retakeBtn" class="secondary" disabled>Retake Photo</button>
-        <button id="switchCameraBtn" class="secondary" disabled>Switch Camera</button>
-        <button id="stopCameraBtn" class="danger" disabled>Stop Camera</button>
-        <button id="downloadBtn" class="secondary" disabled>Download Photo</button>
-        <button id="saveBtn" class="save" disabled>Save to Google Sheets</button>
+      <button id="startCamera">Start Camera</button>
+      <button id="switchCamera" class="secondary" disabled>Switch Camera</button>
+      <button id="stopCamera" class="secondary" disabled>Stop Camera</button>
+      <button id="capturePhoto" class="secondary" disabled>Capture Photo</button>
+      <button id="savePhoto" class="green" disabled>Save Photo to Gallery</button>
     </div>
 
-    <p class="note">
-        Allow camera permission when your browser asks. Camera access requires HTTPS
-        or a supported secure context.
+    <div class="status" id="modelStatus">Loading face recognition models…</div>
+    <div class="status" id="cameraStatus">Camera is stopped.</div>
+    <div class="status" id="matchStatus">No face recognized yet.</div>
+
+    <div class="controls">
+      <button id="recordAttendance" class="green" disabled>Record Time In / Out</button>
+      <button id="refreshFaces" class="secondary">Refresh Face Database</button>
+    </div>
+
+    <p class="small">
+      After a match appears, press Record Time In / Out. The system alternates
+      between Time In and Time Out based on the employee's most recent event
+      for the current date.
     </p>
-</section>
+  </section>
 
-<section class="panel">
-    <h2 class="section-title">Photo Details</h2>
-    <div class="photo-details">
-        <div>Filename: <span id="filename">No photo captured</span></div>
-        <div>Photo size: <span id="photoSize">—</span></div>
-        <div>Upload status: <span id="uploadStatus">Not uploaded</span></div>
+  <section class="card">
+    <h2>Register / Update Employee Face</h2>
+
+    <label for="employeeId">Employee ID</label>
+    <input id="employeeId" autocomplete="off" placeholder="e.g. TP-001">
+
+    <label for="employeeName">Full Name</label>
+    <input id="employeeName" autocomplete="name" placeholder="Employee full name">
+
+    <div class="controls">
+      <button id="registerFace" class="gold" disabled>Capture & Register Face</button>
     </div>
-</section>
 
-<section class="panel">
-    <h2 class="section-title">Saved Photos</h2>
-    <button id="loadGalleryBtn" type="button">
-        Load Photos from Google Sheets
-    </button>
-    <div id="galleryStatus" class="status" role="status" aria-live="polite">
-        Click the button to load saved photos.
+    <div class="status" id="registerStatus">
+      Start the camera and wait for face models to load.
     </div>
-    <div id="photoGallery" class="photo-gallery"></div>
-</section>
 
-</div>
+    <div class="divider"></div>
+
+    <h2>Registered Employees <span class="pill" id="faceCount">0</span></h2>
+
+    <div class="tableWrap">
+      <table>
+        <thead><tr><th>Employee ID</th><th>Name</th><th>Updated</th></tr></thead>
+        <tbody id="facesTable"><tr><td colspan="3">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <p class="small">
+      Face registration stores employee ID, name, and a numeric face descriptor.
+      It does not upload the registration image.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>Attendance Log</h2>
+
+    <label for="attendanceDate">Date</label>
+    <input id="attendanceDate" type="date">
+
+    <div class="controls">
+      <button id="refreshAttendance">Refresh Attendance</button>
+    </div>
+
+    <div class="tableWrap" style="margin-top:12px">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Time</th><th>Employee ID</th><th>Name</th><th>Event</th><th>Match</th></tr>
+        </thead>
+        <tbody id="attendanceTable"><tr><td colspan="6">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Camera Photo Gallery</h2>
+
+    <div class="controls">
+      <button id="refreshGallery">Refresh Gallery</button>
+      <button id="downloadCaptured" class="secondary" disabled>Download Captured Photo</button>
+    </div>
+
+    <div class="status" id="photoStatus">No photo captured.</div>
+    <div class="gallery" id="gallery" style="margin-top:12px">
+      <p class="small">Loading gallery…</p>
+    </div>
+  </section>
+</main>
 
 <script>
-"use strict";
+const API_URL = 'https://script.google.com/macros/s/AKfycbyfokSJh3tVQ57_7XniPweDaHQiH-u4UrcF3bfy9bNSTMIOqfmmeA_f_etoolRmY24RCw/exec';
+const MODEL_BASE_PATH = 'https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/models/';
+const MATCH_THRESHOLD = 0.55;
+const RECOGNITION_INTERVAL_MS = 1200;
 
-const APPS_SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbyfokSJh3tVQ57_7XniPweDaHQiH-u4UrcF3bfy9bNSTMIOqfmmeA_f_etoolRmY24RCw/exec";
+const video = document.getElementById('video');
+const overlay = document.getElementById('faceOverlay');
+const ctx = overlay.getContext('2d');
+const placeholder = document.getElementById('cameraPlaceholder');
 
-const MAX_IMAGE_WIDTH = 960;
-const JPEG_QUALITY = 0.55;
-const CHUNK_SIZE = 30000;
+const modelStatus = document.getElementById('modelStatus');
+const cameraStatus = document.getElementById('cameraStatus');
+const matchStatus = document.getElementById('matchStatus');
+const registerStatus = document.getElementById('registerStatus');
+const photoStatus = document.getElementById('photoStatus');
 
-const video = document.getElementById("video");
-const photoPreview = document.getElementById("photoPreview");
-const placeholder = document.getElementById("placeholder");
-const statusBox = document.getElementById("status");
+const registerButton = document.getElementById('registerFace');
+const recordButton = document.getElementById('recordAttendance');
 
-const openCameraBtn = document.getElementById("openCameraBtn");
-const takePhotoBtn = document.getElementById("takePhotoBtn");
-const retakeBtn = document.getElementById("retakeBtn");
-const switchCameraBtn = document.getElementById("switchCameraBtn");
-const stopCameraBtn = document.getElementById("stopCameraBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const saveBtn = document.getElementById("saveBtn");
+let human = null;
+let modelsReady = false;
+let stream = null;
+let facingMode = 'user';
+let detectionTimer = null;
+let detecting = false;
+let currentMatch = null;
+let registeredFaces = [];
+let capturedBlob = null;
+let capturedFilename = '';
+let photoGallery = [];
+let currentPhotoUrl = null;
 
-const filenameElement = document.getElementById("filename");
-const photoSizeElement = document.getElementById("photoSize");
-const uploadStatusElement = document.getElementById("uploadStatus");
-
-const loadGalleryBtn = document.getElementById("loadGalleryBtn");
-const photoGallery = document.getElementById("photoGallery");
-const galleryStatus = document.getElementById("galleryStatus");
-
-let cameraStream = null;
-let currentFacingMode = "environment";
-let capturedDataUrl = "";
-let capturedBase64 = "";
-let capturedFilename = "";
-let uploading = false;
-
-function setStatus(message, type = "") {
-    statusBox.textContent = message;
-    statusBox.className = "status" + (type ? " " + type : "");
+function setStatus(element, message, type) {
+  element.textContent = message;
+  element.className = 'status' + (type ? ' ' + type : '');
 }
 
-function updateControls() {
-    const cameraOn = Boolean(cameraStream);
-    const hasPhoto = Boolean(capturedBase64);
-
-    openCameraBtn.disabled = cameraOn || uploading;
-    takePhotoBtn.disabled = !cameraOn || uploading;
-    retakeBtn.disabled = !hasPhoto || uploading;
-    switchCameraBtn.disabled = !cameraOn || uploading;
-    stopCameraBtn.disabled = !cameraOn || uploading;
-    downloadBtn.disabled = !hasPhoto || uploading;
-    saveBtn.disabled = !hasPhoto || uploading;
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function showLivePreview() {
+function jsonp(action, extra = {}) {
+  return new Promise((resolve, reject) => {
+    const callback = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    const script = document.createElement('script');
+    const params = new URLSearchParams({ action, callback, ...extra });
+
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('Request timed out. Check Apps Script deployment access.'));
+    }, 25000);
+
+    function cleanup() {
+      clearTimeout(timer);
+      try {
+        delete window[callback];
+      } catch (error) {
+        window[callback] = undefined;
+      }
+      script.remove();
+    }
+
+    window[callback] = data => {
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('Could not contact Google Apps Script.'));
+    };
+
+    script.src = API_URL + '?' + params.toString();
+    document.body.appendChild(script);
+  });
+}
+
+async function postData(payload) {
+  await fetch(API_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+
+  return { submitted: true };
+}
+
+async function initializeHuman() {
+  try {
+    if (!window.Human || !window.Human.Human) {
+      throw new Error('Face recognition library failed to load. Check your internet connection.');
+    }
+
+    human = new Human.Human({
+      modelBasePath: MODEL_BASE_PATH,
+      backend: 'webgl',
+      face: {
+        enabled: true,
+        detector: {
+          enabled: true,
+          rotation: true,
+          maxDetected: 1,
+          minConfidence: 0.55
+        },
+        mesh: { enabled: true },
+        description: { enabled: true },
+        iris: { enabled: false },
+        antispoof: { enabled: false },
+        liveness: { enabled: false }
+      },
+      body: { enabled: false },
+      hand: { enabled: false },
+      object: { enabled: false },
+      gesture: { enabled: false }
+    });
+
+    await human.load();
+    await human.warmup();
+
+    modelsReady = true;
+    setStatus(modelStatus, 'Face recognition models are ready.', 'good');
+
+    await refreshFaces();
+    registerButton.disabled = !stream;
+  } catch (error) {
+    setStatus(modelStatus, 'Model error: ' + error.message, 'bad');
+    console.error(error);
+  }
+}
+
+async function startCamera() {
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Camera access requires HTTPS. Open the app from GitHub Pages.');
+    }
+
+    stopCamera(false);
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: facingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    });
+
+    video.srcObject = stream;
     video.hidden = false;
-    photoPreview.hidden = true;
     placeholder.hidden = true;
+
+    await video.play();
+    resizeOverlay();
+
+    document.getElementById('startCamera').disabled = true;
+    document.getElementById('switchCamera').disabled = false;
+    document.getElementById('stopCamera').disabled = false;
+    document.getElementById('capturePhoto').disabled = false;
+
+    registerButton.disabled = !modelsReady;
+
+    setStatus(cameraStatus, 'Camera is running. Center one face in the frame.', 'good');
+    startDetectionLoop();
+  } catch (error) {
+    setStatus(cameraStatus, 'Camera error: ' + error.message, 'bad');
+  }
 }
 
-function showPhotoPreview() {
-    video.hidden = true;
-    photoPreview.hidden = false;
-    placeholder.hidden = true;
+function stopCamera(updateStatus = true) {
+  if (detectionTimer) clearTimeout(detectionTimer);
+  detectionTimer = null;
+
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+
+  stream = null;
+  video.srcObject = null;
+  video.hidden = true;
+  placeholder.hidden = false;
+
+  document.getElementById('startCamera').disabled = false;
+  document.getElementById('switchCamera').disabled = true;
+  document.getElementById('stopCamera').disabled = true;
+  document.getElementById('capturePhoto').disabled = true;
+
+  registerButton.disabled = true;
+  recordButton.disabled = true;
+
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  currentMatch = null;
+
+  setStatus(matchStatus, 'No face recognized yet.');
+
+  if (updateStatus) {
+    setStatus(cameraStatus, 'Camera is stopped.');
+  }
 }
 
-function showPlaceholder() {
-    video.hidden = true;
-    photoPreview.hidden = true;
-    placeholder.hidden = false;
+function resizeOverlay() {
+  if (!video.videoWidth || !video.videoHeight) return;
+
+  overlay.width = video.videoWidth;
+  overlay.height = video.videoHeight;
 }
 
-function stopCameraTracks() {
-    if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        cameraStream = null;
+function startDetectionLoop() {
+  if (detectionTimer) clearTimeout(detectionTimer);
+
+  async function loop() {
+    if (!stream) return;
+
+    if (!modelsReady || detecting) {
+      detectionTimer = setTimeout(loop, RECOGNITION_INTERVAL_MS);
+      return;
     }
-    video.srcObject = null;
-}
 
-async function openCamera() {
-    if (!navigator.mediaDevices ||
-        !navigator.mediaDevices.getUserMedia) {
-        setStatus(
-            "Camera access is unavailable. Open this site over HTTPS.",
-            "error"
-        );
-        return;
-    }
-
-    stopCameraTracks();
+    detecting = true;
 
     try {
-        setStatus("Requesting camera permission...");
+      const result = await human.detect(video);
+      const face = result.face && result.face.length ? result.face[0] : null;
 
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: { ideal: currentFacingMode },
-                width: { ideal: 1280 },
-                height: { ideal: 960 }
-            },
-            audio: false
-        });
+      drawFace(face);
 
-        video.srcObject = cameraStream;
-        await video.play();
+      if (face && face.embedding && face.embedding.length) {
+        currentMatch = matchFace(Array.from(face.embedding));
 
-        showLivePreview();
-        setStatus("Camera is ready.", "success");
-    } catch (error) {
-        cameraStream = null;
-        showPlaceholder();
+        if (currentMatch) {
+          setStatus(
+            matchStatus,
+            'Match: ' + currentMatch.name + ' (' + currentMatch.employeeId + ') · ' +
+            (currentMatch.similarity * 100).toFixed(1) +
+            '% similarity. Press Record Time In / Out when ready.',
+            'good'
+          );
 
-        let message = "Unable to open the camera.";
+          recordButton.disabled = false;
+        } else {
+          setStatus(
+            matchStatus,
+            'Face detected, but no registered face passed the matching threshold.',
+            'warn'
+          );
 
-        if (error.name === "NotAllowedError") {
-            message = "Camera permission denied. Allow camera access in browser settings.";
-        } else if (error.name === "NotFoundError") {
-            message = "No compatible camera was found.";
-        } else if (error.name === "NotReadableError") {
-            message = "The camera may be in use by another application.";
+          recordButton.disabled = true;
         }
-
-        setStatus(message, "error");
+      } else {
+        currentMatch = null;
+        recordButton.disabled = true;
+        setStatus(matchStatus, 'No clear face detected. Face the camera and improve the lighting.');
+      }
+    } catch (error) {
+      console.error(error);
+      setStatus(matchStatus, 'Face detection issue: ' + error.message, 'bad');
+    } finally {
+      detecting = false;
+      if (stream) detectionTimer = setTimeout(loop, RECOGNITION_INTERVAL_MS);
     }
+  }
 
-    updateControls();
+  detectionTimer = setTimeout(loop, 500);
 }
 
-function stopCamera() {
-    stopCameraTracks();
-    showPlaceholder();
+function drawFace(face) {
+  if (!video.videoWidth || !video.videoHeight) return;
 
-    setStatus(
-        capturedBase64
-            ? "Camera stopped. Your captured photo is still available."
-            : "Camera stopped."
+  if (overlay.width !== video.videoWidth || overlay.height !== video.videoHeight) {
+    resizeOverlay();
+  }
+
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+  if (!face || !face.box) return;
+
+  const box = face.box;
+  ctx.lineWidth = Math.max(3, overlay.width / 320);
+  ctx.strokeStyle = '#22c55e';
+  ctx.strokeRect(box[0], box[1], box[2], box[3]);
+}
+
+function matchFace(descriptor) {
+  if (!registeredFaces.length || !human) return null;
+
+  let best = null;
+
+  registeredFaces.forEach(person => {
+    const similarity = human.match.similarity(descriptor, person.descriptor);
+
+    if (!best || similarity > best.similarity) {
+      best = { ...person, similarity };
+    }
+  });
+
+  return best && best.similarity >= MATCH_THRESHOLD ? best : null;
+}
+
+async function captureDescriptor() {
+  if (!stream || !modelsReady) {
+    throw new Error('Start the camera and wait for models to load.');
+  }
+
+  const result = await human.detect(video);
+  const faces = result.face || [];
+
+  if (faces.length !== 1 || !faces[0].embedding || !faces[0].embedding.length) {
+    throw new Error(
+      faces.length > 1
+        ? 'Only one face should be visible during registration.'
+        : 'No clear face found. Face the camera and try again.'
+    );
+  }
+
+  return Array.from(faces[0].embedding);
+}
+
+async function registerCurrentFace() {
+  const employeeId = document.getElementById('employeeId').value.trim();
+  const name = document.getElementById('employeeName').value.trim();
+
+  if (!employeeId || !name) {
+    setStatus(registerStatus, 'Enter employee ID and full name first.', 'warn');
+    return;
+  }
+
+  registerButton.disabled = true;
+  setStatus(registerStatus, 'Capturing face descriptor…');
+
+  try {
+    const descriptor = await captureDescriptor();
+
+    await postData({
+      action: 'registerFace',
+      employeeId: employeeId,
+      name: name,
+      descriptor: descriptor
+    });
+
+    await wait(1500);
+    await refreshFaces();
+
+    const saved = registeredFaces.some(
+      person => person.employeeId.toLowerCase() === employeeId.toLowerCase()
     );
 
-    updateControls();
+    setStatus(
+      registerStatus,
+      saved
+        ? 'Registration appears in the face database for ' + name + '.'
+        : 'Registration submitted. Refresh the face database again to verify.',
+      saved ? 'good' : 'warn'
+    );
+  } catch (error) {
+    setStatus(registerStatus, 'Registration failed: ' + error.message, 'bad');
+  } finally {
+    registerButton.disabled = !stream || !modelsReady;
+  }
 }
 
-async function switchCamera() {
-    currentFacingMode =
-        currentFacingMode === "environment" ? "user" : "environment";
-    await openCamera();
-}
+async function recordAttendance() {
+  if (!currentMatch) {
+    setStatus(matchStatus, 'No registered employee match is available.', 'warn');
+    return;
+  }
 
-function createFilename() {
-    return "photo-" +
-        new Date().toISOString().replace(/[:.]/g, "-") +
-        ".jpg";
-}
+  recordButton.disabled = true;
 
-function makePhotoId() {
-    if (crypto && typeof crypto.randomUUID === "function") {
-        return crypto.randomUUID();
-    }
+  const match = { ...currentMatch };
+  setStatus(matchStatus, 'Submitting attendance event for ' + match.name + '…');
 
-    return "photo-" + Date.now() + "-" +
-        Math.random().toString(36).slice(2);
-}
-
-function formatBytes(bytes) {
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-}
-
-function takePhoto() {
-    if (!cameraStream || !video.videoWidth || !video.videoHeight) {
-        setStatus("Wait for the camera preview to become ready.", "error");
-        return;
-    }
-
-    const scale = Math.min(1, MAX_IMAGE_WIDTH / video.videoWidth);
-    const canvas = document.createElement("canvas");
-
-    canvas.width = Math.round(video.videoWidth * scale);
-    canvas.height = Math.round(video.videoHeight * scale);
-
-    const context = canvas.getContext("2d");
-
-    if (!context) {
-        setStatus("Unable to create the photo.", "error");
-        return;
-    }
-
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    capturedDataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
-    capturedBase64 = capturedDataUrl.split(",")[1] || "";
-    capturedFilename = createFilename();
-
-    photoPreview.src = capturedDataUrl;
-    showPhotoPreview();
-
-    filenameElement.textContent = capturedFilename;
-    photoSizeElement.textContent =
-        formatBytes(Math.ceil(capturedBase64.length * 3 / 4));
-    uploadStatusElement.textContent = "Not uploaded";
-
-    setStatus("Photo captured. You can retake, download, or save it.");
-    updateControls();
-}
-
-function retakePhoto() {
-    capturedDataUrl = "";
-    capturedBase64 = "";
-    capturedFilename = "";
-
-    photoPreview.removeAttribute("src");
-    filenameElement.textContent = "No photo captured";
-    photoSizeElement.textContent = "—";
-    uploadStatusElement.textContent = "Not uploaded";
-
-    if (cameraStream) {
-        showLivePreview();
-        setStatus("Ready to take another photo.");
-    } else {
-        showPlaceholder();
-        setStatus("Open the camera to take another photo.");
-    }
-
-    updateControls();
-}
-
-function downloadPhoto() {
-    if (!capturedDataUrl) return;
-
-    const link = document.createElement("a");
-    link.href = capturedDataUrl;
-    link.download = capturedFilename || "photo.jpg";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    setStatus("Download started.");
-}
-
-function postToAppsScript(payload) {
-    return fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify(payload)
+  try {
+    await postData({
+      action: 'attendance',
+      employeeId: match.employeeId,
+      name: match.name,
+      similarity: Number(match.similarity.toFixed(4)),
+      source: 'GitHub Pages Face Camera'
     });
+
+    await wait(1500);
+    await refreshAttendance();
+
+    setStatus(
+      matchStatus,
+      'Attendance request submitted for ' + match.name +
+      '. Check the attendance log below to confirm it was recorded.',
+      'good'
+    );
+  } catch (error) {
+    setStatus(matchStatus, 'Could not submit attendance: ' + error.message, 'bad');
+  } finally {
+    recordButton.disabled = !currentMatch;
+  }
 }
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+function capturePhoto() {
+  if (!stream || !video.videoWidth) return;
 
-async function saveToGoogleSheets() {
-    if (!capturedBase64 || uploading) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
 
-    uploading = true;
-    updateControls();
-    saveBtn.textContent = "Saving...";
-    uploadStatusElement.textContent = "Sending...";
+  const canvasContext = canvas.getContext('2d');
+  canvasContext.translate(canvas.width, 0);
+  canvasContext.scale(-1, 1);
+  canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const photoId = makePhotoId();
-    const totalChunks = Math.ceil(capturedBase64.length / CHUNK_SIZE);
-
-    try {
-        for (let index = 0; index < totalChunks; index++) {
-            const chunk = capturedBase64.slice(
-                index * CHUNK_SIZE,
-                (index + 1) * CHUNK_SIZE
-            );
-
-            await postToAppsScript({
-                action: "chunk",
-                photoId: photoId,
-                chunkIndex: index,
-                totalChunks: totalChunks,
-                chunk: chunk
-            });
-
-            setStatus(
-                "Sending photo data: chunk " + (index + 1) +
-                " of " + totalChunks + "."
-            );
-
-            await delay(150);
-        }
-
-        await postToAppsScript({
-            action: "finish",
-            photoId: photoId,
-            filename: capturedFilename,
-            mimeType: "image/jpeg"
-        });
-
-        uploadStatusElement.textContent = "Sent; verification needed";
-
-        setStatus(
-            "Upload requests were sent. Check Camera Logs and Photo Data to verify the photo was saved."
-        );
-    } catch (error) {
-        uploadStatusElement.textContent = "Upload error";
-        setStatus(
-            "A network error occurred. Check your connection and Google Apps Script deployment.",
-            "error"
-        );
-    } finally {
-        uploading = false;
-        saveBtn.textContent = "Save to Google Sheets";
-        updateControls();
+  canvas.toBlob(blob => {
+    if (!blob) {
+      setStatus(photoStatus, 'Could not capture image.', 'bad');
+      return;
     }
+
+    capturedBlob = blob;
+    capturedFilename = 'camera-' +
+      new Date().toISOString().replace(/[:.]/g, '-') + '.jpg';
+
+    document.getElementById('savePhoto').disabled = false;
+    document.getElementById('downloadCaptured').disabled = false;
+
+    setStatus(photoStatus, 'Photo captured: ' + capturedFilename, 'good');
+  }, 'image/jpeg', 0.88);
 }
 
-/* JSONP reader for the Apps Script gallery endpoints. */
-function callAppsScriptJsonp(params) {
-    return new Promise((resolve, reject) => {
-        const callbackName = "sheetCallback_" +
-            Date.now() + "_" +
-            Math.random().toString(36).slice(2);
+async function savePhotoToSheets() {
+  if (!capturedBlob) return;
 
-        const script = document.createElement("script");
-        const url = new URL(APPS_SCRIPT_URL);
+  const button = document.getElementById('savePhoto');
+  button.disabled = true;
+  setStatus(photoStatus, 'Preparing photo for upload…');
 
-        Object.entries(params).forEach(([key, value]) => {
-            url.searchParams.set(key, value);
-        });
-
-        url.searchParams.set("callback", callbackName);
-        url.searchParams.set("_", Date.now());
-
-        let finished = false;
-
-        function cleanup() {
-            delete window[callbackName];
-            script.remove();
-        }
-
-        const timer = setTimeout(() => {
-            if (finished) return;
-            finished = true;
-            cleanup();
-            reject(new Error("Request timed out."));
-        }, 60000);
-
-        window[callbackName] = data => {
-            if (finished) return;
-            finished = true;
-            clearTimeout(timer);
-            cleanup();
-            resolve(data);
-        };
-
-        script.onerror = () => {
-            if (finished) return;
-            finished = true;
-            clearTimeout(timer);
-            cleanup();
-            reject(new Error("Could not contact Google Apps Script."));
-        };
-
-        script.src = url.toString();
-        document.head.appendChild(script);
+  try {
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(capturedBlob);
     });
-}
 
-function openImageInNewTab(dataUrl) {
-    const newWindow = window.open("", "_blank");
+    const base64 = String(dataUrl).split(',')[1];
+    const photoId = 'photo_' + Date.now() + '_' +
+      Math.random().toString(36).slice(2, 8);
 
-    if (!newWindow) {
-        galleryStatus.textContent =
-            "Your browser blocked the new tab. Allow pop-ups and try again.";
-        return;
+    const chunkSize = 30000;
+    const chunks = [];
+
+    for (let i = 0; i < base64.length; i += chunkSize) {
+      chunks.push(base64.slice(i, i + chunkSize));
     }
 
-    const image = newWindow.document.createElement("img");
-    image.src = dataUrl;
-    image.alt = "Saved photo";
-    image.style.maxWidth = "100%";
-    image.style.height = "auto";
+    for (let i = 0; i < chunks.length; i++) {
+      await postData({
+        action: 'chunk',
+        photoId: photoId,
+        chunkNumber: i + 1,
+        totalChunks: chunks.length,
+        chunk: chunks[i]
+      });
 
-    newWindow.document.title = "Saved Photo";
-    newWindow.document.body.style.margin = "0";
-    newWindow.document.body.style.background = "#111";
-    newWindow.document.body.appendChild(image);
-}
-
-async function loadSavedPhotos() {
-    loadGalleryBtn.disabled = true;
-    photoGallery.replaceChildren();
-    galleryStatus.textContent = "Loading photo list...";
-
-    try {
-        const result = await callAppsScriptJsonp({
-            action: "gallery"
-        });
-
-        if (!result.ok) {
-            throw new Error(result.error || "Unable to load the gallery.");
-        }
-
-        const photos = result.photos || [];
-
-        if (!photos.length) {
-            galleryStatus.textContent =
-                "No photos found in Camera Logs.";
-            return;
-        }
-
-        let loaded = 0;
-        let failed = 0;
-
-        galleryStatus.textContent =
-            "Found " + photos.length + " photo(s). Loading images...";
-
-        for (const photo of photos) {
-            const card = document.createElement("div");
-            card.className = "gallery-card";
-
-            const img = document.createElement("img");
-            img.className = "gallery-image";
-            img.alt = photo.filename || "Saved photo";
-            img.loading = "lazy";
-
-            const name = document.createElement("div");
-            name.className = "gallery-filename";
-            name.textContent = photo.filename || "Saved photo";
-
-            const date = document.createElement("div");
-            date.className = "gallery-date";
-            date.textContent = photo.timestamp || "";
-
-            const openButton = document.createElement("button");
-            openButton.type = "button";
-            openButton.className = "secondary";
-            openButton.textContent = "Open Photo";
-            openButton.disabled = true;
-
-            const downloadButton = document.createElement("button");
-            downloadButton.type = "button";
-            downloadButton.className = "secondary";
-            downloadButton.textContent = "Download";
-            downloadButton.disabled = true;
-
-            card.append(img, name, date, openButton, downloadButton);
-            photoGallery.appendChild(card);
-
-            try {
-                const imageResult = await callAppsScriptJsonp({
-                    action: "photo",
-                    id: photo.id
-                });
-
-                if (!imageResult.ok || !imageResult.base64) {
-                    throw new Error(
-                        imageResult.error || "Image data is missing."
-                    );
-                }
-
-                const dataUrl = "data:" +
-                    (imageResult.mimeType || "image/jpeg") +
-                    ";base64," + imageResult.base64;
-
-                img.src = dataUrl;
-
-                img.addEventListener("click", () => {
-                    openImageInNewTab(dataUrl);
-                });
-
-                openButton.disabled = false;
-                downloadButton.disabled = false;
-
-                openButton.addEventListener("click", () => {
-                    openImageInNewTab(dataUrl);
-                });
-
-                downloadButton.addEventListener("click", () => {
-                    const link = document.createElement("a");
-                    link.href = dataUrl;
-                    link.download = photo.filename || "saved-photo.jpg";
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                });
-
-                loaded++;
-            } catch (error) {
-                img.alt = "Unable to load this photo";
-                name.textContent =
-                    (photo.filename || "Saved photo") + " — failed to load";
-                failed++;
-            }
-
-            galleryStatus.textContent =
-                "Loaded " + loaded + " of " + photos.length +
-                " photo(s)" +
-                (failed ? "; " + failed + " failed." : "...");
-        }
-
-        galleryStatus.textContent =
-            "Finished: " + loaded + " photo(s) loaded." +
-            (failed ? " " + failed + " could not be loaded." : "");
-    } catch (error) {
-        galleryStatus.textContent =
-            "Error: " + error.message +
-            " Check the deployment URL, access permissions, and sheet names.";
-    } finally {
-        loadGalleryBtn.disabled = false;
+      await wait(150);
     }
+
+    await postData({
+      action: 'finish',
+      photoId: photoId,
+      filename: capturedFilename,
+      mimeType: 'image/jpeg',
+      chunkCount: chunks.length
+    });
+
+    await wait(1500);
+    await refreshGallery();
+
+    setStatus(
+      photoStatus,
+      'Photo upload submitted. Check the gallery to confirm it appears.',
+      'good'
+    );
+  } catch (error) {
+    setStatus(photoStatus, 'Photo save failed: ' + error.message, 'bad');
+  } finally {
+    button.disabled = false;
+  }
 }
 
-openCameraBtn.addEventListener("click", openCamera);
-takePhotoBtn.addEventListener("click", takePhoto);
-retakeBtn.addEventListener("click", retakePhoto);
-switchCameraBtn.addEventListener("click", switchCamera);
-stopCameraBtn.addEventListener("click", stopCamera);
-downloadBtn.addEventListener("click", downloadPhoto);
-saveBtn.addEventListener("click", saveToGoogleSheets);
-loadGalleryBtn.addEventListener("click", loadSavedPhotos);
+function downloadCaptured() {
+  if (!capturedBlob) return;
 
-window.addEventListener("pagehide", stopCameraTracks);
+  const url = URL.createObjectURL(capturedBlob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = capturedFilename || 'camera-photo.jpg';
+  anchor.click();
 
-updateControls();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function refreshFaces() {
+  try {
+    const data = await jsonp('faces');
+
+    if (!data.ok) throw new Error(data.error || 'Unable to load face database.');
+
+    registeredFaces = data.faces || [];
+
+    document.getElementById('faceCount').textContent = registeredFaces.length;
+
+    const tbody = document.getElementById('facesTable');
+    tbody.replaceChildren();
+
+    if (!registeredFaces.length) {
+      tbody.innerHTML = '<tr><td colspan="3">No registered employees yet.</td></tr>';
+      return;
+    }
+
+    registeredFaces.forEach(person => {
+      const tr = document.createElement('tr');
+
+      [
+        person.employeeId,
+        person.name,
+        formatDate(person.updatedAt || person.createdAt)
+      ].forEach(value => {
+        const td = document.createElement('td');
+        td.textContent = value || '—';
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    setStatus(registerStatus, 'Could not load face database: ' + error.message, 'bad');
+  }
+}
+
+async function refreshAttendance() {
+  const date = document.getElementById('attendanceDate').value;
+
+  try {
+    const data = await jsonp('attendance', date ? { date: date } : {});
+
+    if (!data.ok) throw new Error(data.error || 'Unable to load attendance.');
+
+    const tbody = document.getElementById('attendanceTable');
+    tbody.replaceChildren();
+
+    const rows = data.rows || [];
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6">No attendance records for this date.</td></tr>';
+      return;
+    }
+
+    rows.forEach(row => {
+      const tr = document.createElement('tr');
+
+      [
+        row.date,
+        row.time,
+        row.employeeId,
+        row.name,
+        row.event,
+        (Number(row.similarity || 0) * 100).toFixed(1) + '%'
+      ].forEach((value, index) => {
+        const td = document.createElement('td');
+
+        if (index === 4) {
+          const pill = document.createElement('span');
+          pill.className = 'pill ' + (value === 'TIME IN' ? 'in' : 'out');
+          pill.textContent = value;
+          td.appendChild(pill);
+        } else {
+          td.textContent = value;
+        }
+
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    const tbody = document.getElementById('attendanceTable');
+    tbody.replaceChildren();
+
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 6;
+    td.textContent = 'Error: ' + error.message;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+}
+
+async function refreshGallery() {
+  const gallery = document.getElementById('gallery');
+
+  try {
+    const data = await jsonp('gallery');
+
+    if (!data.ok) throw new Error(data.error || 'Unable to load gallery.');
+
+    photoGallery = data.photos || [];
+    gallery.replaceChildren();
+
+    if (!photoGallery.length) {
+      gallery.innerHTML = '<p class="small">No photos saved yet.</p>';
+      return;
+    }
+
+    photoGallery.forEach(photo => {
+      const card = document.createElement('div');
+      card.className = 'photo';
+
+      const img = document.createElement('img');
+      img.alt = photo.filename || 'Saved photo';
+      img.loading = 'lazy';
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
+      const title = document.createElement('p');
+      title.textContent = photo.filename || photo.photoId;
+
+      const date = document.createElement('p');
+      date.textContent = formatDate(photo.timestamp);
+
+      const viewButton = document.createElement('button');
+      viewButton.className = 'secondary';
+      viewButton.textContent = 'Open / Load';
+      viewButton.addEventListener('click', () => loadGalleryPhoto(photo, img));
+
+      const downloadButton = document.createElement('button');
+      downloadButton.className = 'secondary';
+      downloadButton.textContent = 'Download';
+
+      downloadButton.addEventListener('click', async () => {
+        try {
+          const blob = await fetchGalleryBlob(photo.photoId, photo.mimeType);
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+
+          anchor.href = url;
+          anchor.download = photo.filename || 'photo.jpg';
+          anchor.click();
+
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+          setStatus(photoStatus, 'Download failed: ' + error.message, 'bad');
+        }
+      });
+
+      card.append(img, title, date, viewButton, downloadButton);
+      gallery.appendChild(card);
+    });
+  } catch (error) {
+    gallery.textContent = 'Gallery error: ' + error.message;
+  }
+}
+
+async function fetchGalleryBlob(photoId, mimeType) {
+  const data = await jsonp('photo', { photoId: photoId });
+
+  if (!data.ok) throw new Error(data.error || 'Photo could not be loaded.');
+
+  const base64 = (data.chunks || []).join('');
+  const raw = atob(base64);
+  const bytes = new Uint8Array(raw.length);
+
+  for (let i = 0; i < raw.length; i++) {
+    bytes[i] = raw.charCodeAt(i);
+  }
+
+  return new Blob([bytes], { type: mimeType || 'image/jpeg' });
+}
+
+async function loadGalleryPhoto(photo, img) {
+  try {
+    const blob = await fetchGalleryBlob(photo.photoId, photo.mimeType);
+
+    if (currentPhotoUrl) URL.revokeObjectURL(currentPhotoUrl);
+
+    currentPhotoUrl = URL.createObjectURL(blob);
+    img.src = currentPhotoUrl;
+
+    setStatus(photoStatus, 'Loaded gallery photo: ' + (photo.filename || photo.photoId), 'good');
+  } catch (error) {
+    setStatus(photoStatus, 'Could not load photo: ' + error.message, 'bad');
+  }
+}
+
+function formatDate(value) {
+  if (!value) return '';
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toLocaleString();
+}
+
+document.getElementById('startCamera').addEventListener('click', startCamera);
+document.getElementById('stopCamera').addEventListener('click', () => stopCamera());
+
+document.getElementById('switchCamera').addEventListener('click', async () => {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  await startCamera();
+});
+
+document.getElementById('capturePhoto').addEventListener('click', capturePhoto);
+document.getElementById('savePhoto').addEventListener('click', savePhotoToSheets);
+document.getElementById('downloadCaptured').addEventListener('click', downloadCaptured);
+document.getElementById('registerFace').addEventListener('click', registerCurrentFace);
+document.getElementById('recordAttendance').addEventListener('click', recordAttendance);
+document.getElementById('refreshFaces').addEventListener('click', refreshFaces);
+document.getElementById('refreshAttendance').addEventListener('click', refreshAttendance);
+document.getElementById('refreshGallery').addEventListener('click', refreshGallery);
+
+video.addEventListener('loadedmetadata', resizeOverlay);
+
+function setDefaultAttendanceDate() {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 10);
+
+  document.getElementById('attendanceDate').value = localDate;
+}
+
+setDefaultAttendanceDate();
+initializeHuman();
+refreshGallery();
+refreshAttendance();
 </script>
 </body>
 </html>
