@@ -167,14 +167,13 @@ th { position: sticky; top: 0; background: #17243a; color: #dbeafe; }
     <div class="status" id="matchStatus">No face recognized yet.</div>
 
     <div class="controls">
-      <button id="recordAttendance" class="green" disabled>Record Time In / Out</button>
       <button id="refreshFaces" class="secondary">Refresh Face Database</button>
     </div>
 
     <p class="small">
-      After a match appears, press Record Time In / Out. The system alternates
-      between Time In and Time Out based on the employee's most recent event
-      for the current date.
+      Attendance is recorded automatically when a registered face is recognized.
+      After each event, the same employee must leave the camera view and be
+      recognized again after the 2-minute protection period to record the next event.
     </p>
   </section>
 
@@ -225,7 +224,7 @@ th { position: sticky; top: 0; background: #17243a; color: #dbeafe; }
     <div class="tableWrap" style="margin-top:12px">
       <table>
         <thead>
-          <tr><th>Date</th><th>Time</th><th>Employee ID</th><th>Name</th><th>Event</th><th>Match</th></tr>
+          <tr><th>Date</th><th>Employee ID</th><th>Name</th><th>Time In</th><th>Time Out</th><th>Match</th></tr>
         </thead>
         <tbody id="attendanceTable"><tr><td colspan="6">Loading…</td></tr></tbody>
       </table>
@@ -252,6 +251,8 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyfokSJh3tVQ57_7XniPweD
 const MODEL_BASE_PATH = 'https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/models/';
 const MATCH_THRESHOLD = 0.55;
 const RECOGNITION_INTERVAL_MS = 1200;
+const FACE_ABSENCE_REARM_MS = 5000;
+const ATTENDANCE_COOLDOWN_MS = 2 * 60 * 1000;
 
 const video = document.getElementById('video');
 const overlay = document.getElementById('faceOverlay');
@@ -265,7 +266,6 @@ const registerStatus = document.getElementById('registerStatus');
 const photoStatus = document.getElementById('photoStatus');
 
 const registerButton = document.getElementById('registerFace');
-const recordButton = document.getElementById('recordAttendance');
 
 let human = null;
 let modelsReady = false;
@@ -275,6 +275,11 @@ let detectionTimer = null;
 let detecting = false;
 let currentMatch = null;
 let registeredFaces = [];
+let lastRecognizedEmployeeId = '';
+let lastRecognizedAt = 0;
+let faceAbsentSince = 0;
+let attendanceSubmitting = false;
+let localAttendanceTimes = {};
 let capturedBlob = null;
 let capturedFilename = '';
 let photoGallery = [];
@@ -436,7 +441,9 @@ function stopCamera(updateStatus = true) {
   document.getElementById('capturePhoto').disabled = true;
 
   registerButton.disabled = true;
-  recordButton.disabled = true;
+  lastRecognizedEmployeeId = '';
+  lastRecognizedAt = 0;
+  faceAbsentSince = Date.now();
 
   ctx.clearRect(0, 0, overlay.width, overlay.height);
   currentMatch = null;
@@ -478,15 +485,25 @@ function startDetectionLoop() {
         currentMatch = matchFace(Array.from(face.embedding));
 
         if (currentMatch) {
+          faceAbsentSince = 0;
           setStatus(
             matchStatus,
-            'Match: ' + currentMatch.name + ' (' + currentMatch.employeeId + ') · ' +
+            'Recognized: ' + currentMatch.name + ' (' + currentMatch.employeeId + ') · ' +
             (currentMatch.similarity * 100).toFixed(1) +
-            '% similarity. Press Record Time In / Out when ready.',
+            '% match. Recording attendance automatically…',
             'good'
           );
 
-          recordButton.disabled = false;
+          const now = Date.now();
+          const employeeKey = String(currentMatch.employeeId).toLowerCase();
+          const isNewAppearance = lastRecognizedEmployeeId !== employeeKey &&
+            (!lastRecognizedAt || now - lastRecognizedAt >= FACE_ABSENCE_REARM_MS);
+
+          if (isNewAppearance && !attendanceSubmitting) {
+            lastRecognizedEmployeeId = employeeKey;
+            lastRecognizedAt = now;
+            recordAttendance();
+          }
         } else {
           setStatus(
             matchStatus,
@@ -494,11 +511,18 @@ function startDetectionLoop() {
             'warn'
           );
 
-          recordButton.disabled = true;
+          currentMatch = null;
+          if (!faceAbsentSince) faceAbsentSince = Date.now();
+          if (Date.now() - faceAbsentSince >= FACE_ABSENCE_REARM_MS) {
+            lastRecognizedEmployeeId = '';
+          }
         }
       } else {
         currentMatch = null;
-        recordButton.disabled = true;
+        if (!faceAbsentSince) faceAbsentSince = Date.now();
+        if (Date.now() - faceAbsentSince >= FACE_ABSENCE_REARM_MS) {
+          lastRecognizedEmployeeId = '';
+        }
         setStatus(matchStatus, 'No clear face detected. Face the camera and improve the lighting.');
       }
     } catch (error) {
@@ -609,38 +633,41 @@ async function registerCurrentFace() {
 }
 
 async function recordAttendance() {
-  if (!currentMatch) {
-    setStatus(matchStatus, 'No registered employee match is available.', 'warn');
-    return;
-  }
+  if (!currentMatch || attendanceSubmitting) return;
 
-  recordButton.disabled = true;
-
+  attendanceSubmitting = true;
   const match = { ...currentMatch };
-  setStatus(matchStatus, 'Submitting attendance event for ' + match.name + '…');
+  setStatus(matchStatus, 'Recording attendance automatically for ' + match.name + '…');
 
   try {
-    await postData({
-      action: 'attendance',
+    const result = await jsonp('attendanceRecord', {
       employeeId: match.employeeId,
       name: match.name,
       similarity: Number(match.similarity.toFixed(4)),
       source: 'GitHub Pages Face Camera'
     });
 
-    await wait(1500);
-    await refreshAttendance();
+    if (!result.ok) throw new Error(result.error || 'Attendance could not be recorded.');
 
-    setStatus(
-      matchStatus,
-      'Attendance request submitted for ' + match.name +
-      '. Check the attendance log below to confirm it was recorded.',
-      'good'
-    );
+    if (result.recorded) {
+      setStatus(
+        matchStatus,
+        match.name + ': ' + result.message,
+        'good'
+      );
+    } else {
+      setStatus(
+        matchStatus,
+        match.name + ': ' + (result.message || 'Attendance already recorded.'),
+        'warn'
+      );
+    }
+
+    await refreshAttendance();
   } catch (error) {
-    setStatus(matchStatus, 'Could not submit attendance: ' + error.message, 'bad');
+    setStatus(matchStatus, 'Could not record attendance: ' + error.message, 'bad');
   } finally {
-    recordButton.disabled = !currentMatch;
+    attendanceSubmitting = false;
   }
 }
 
@@ -807,23 +834,14 @@ async function refreshAttendance() {
 
       [
         row.date,
-        row.time,
         row.employeeId,
         row.name,
-        row.event,
+        row.timeIn || '—',
+        row.timeOut || '—',
         (Number(row.similarity || 0) * 100).toFixed(1) + '%'
-      ].forEach((value, index) => {
+      ].forEach(value => {
         const td = document.createElement('td');
-
-        if (index === 4) {
-          const pill = document.createElement('span');
-          pill.className = 'pill ' + (value === 'TIME IN' ? 'in' : 'out');
-          pill.textContent = value;
-          td.appendChild(pill);
-        } else {
-          td.textContent = value;
-        }
-
+        td.textContent = value;
         tr.appendChild(td);
       });
 
@@ -959,7 +977,6 @@ document.getElementById('capturePhoto').addEventListener('click', capturePhoto);
 document.getElementById('savePhoto').addEventListener('click', savePhotoToSheets);
 document.getElementById('downloadCaptured').addEventListener('click', downloadCaptured);
 document.getElementById('registerFace').addEventListener('click', registerCurrentFace);
-document.getElementById('recordAttendance').addEventListener('click', recordAttendance);
 document.getElementById('refreshFaces').addEventListener('click', refreshFaces);
 document.getElementById('refreshAttendance').addEventListener('click', refreshAttendance);
 document.getElementById('refreshGallery').addEventListener('click', refreshGallery);
