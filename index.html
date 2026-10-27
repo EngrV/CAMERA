@@ -149,7 +149,7 @@ th { position: sticky; top: 0; background: #17243a; color: #dbeafe; }
   <section class="card">
     <h2>Camera</h2>
     <div class="cameraWrap">
-      <div class="cameraPlaceholder" id="cameraPlaceholder">Start camera to begin</div>
+      <div class="cameraPlaceholder" id="cameraPlaceholder">Opening camera automatically…</div>
       <video id="video" autoplay playsinline muted hidden></video>
       <canvas id="faceOverlay"></canvas>
     </div>
@@ -996,6 +996,14 @@ setDefaultAttendanceDate();
 initializeHuman();
 refreshGallery();
 refreshAttendance();
+
+// Start the camera automatically when the page opens. The browser may ask
+// the user to grant camera permission the first time.
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (!stream) startCamera();
+  }, 500);
+});
 </script>
 </body>
 </html>
